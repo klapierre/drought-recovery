@@ -1,0 +1,21 @@
+{
+    "collab_server" : "",
+    "contents" : "library(tidyverse)\n\n#kim's desktop\nsetwd('C:\\\\Users\\\\la pierrek\\\\Dropbox (Smithsonian)\\\\konza projects\\\\drought recovery')\n\n###Konza - Watersheds\n\nknz_anpp <- read.csv('KNZ_anpp.csv')%>%\n  mutate(calendar_year=RECYEAR, site_code='KNZ', community_type=paste(WATERSHED, SOILTYPE, sep='_'), plot_id=paste(TRANSECT, PLOTNUM, sep='_'), grass=ifelse(LVGRASS=='NULL', 0, LVGRASS), forb=ifelse(FORBS=='NULL', 0, FORBS), current_dead=ifelse(CUYRDEAD=='NULL', 0, CUYRDEAD), litter=ifelse(PRYRDEAD=='NULL', 0, PRYRDEAD), woody=ifelse(WOODY=='NULL', 0, WOODY), comments=COMMENTS)%>%\n  select(calendar_year, site_code, community_type, plot_id, grass, forb, current_dead, litter, woody, comments)%>%\n  gather(key=form, value=biomass, grass:woody)%>%\n  mutate(area_sampled=0.1)\n# write.csv(knz_anpp, 'KNZ_anpp_formatted.csv')\n\nknz_spp <- read.csv('C:\\\\Users\\\\la pierrek\\\\Dropbox (Smithsonian)\\\\konza projects\\\\prairie species lists\\\\konza_spplist.csv')\n\nknz_comp <- read.csv('KNZ_composition.csv')%>%\n  mutate(soil=ifelse(SOILTYPE=='f', 'fl', 'tu'), spnum=SPECODE, trans=ifelse(Transect=='A', 'a', ifelse(Transect=='B', 'b', ifelse(Transect=='C', 'c', 'd'))))%>%\n  left_join(knz_spp)%>%\n  mutate(calendar_year=RECYEAR, site_code='KNZ', community_type=paste(WATERSHED, soil, sep='_'), plot_id=paste(trans, Plot, sep='_'), species_code=SPECODE, genus_species=paste(genus, spp, sep='_'), abundance=Cover, comments=Comments)%>%\n  select(calendar_year, site_code, community_type, plot_id, species_code, genus_species, abundance, comments)\n# write.csv(knz_comp, 'KNZ_composition_formatted.csv')\n\n\n###Saline Experimental Range - NutNet controls\nser_treatments <- read.csv('KNZ_SER_NutNet_plan.csv')%>%\n  mutate(treatment=treat_other_name)%>%\n  select(site, plot, treatment)\n\nser_anpp <- read.csv('SER_anpp.csv')%>%\n  left_join(ser_treatments)%>%\n  mutate(calendar_year=year, site_code=site, community_type='NA', plot_id=plot, comments=note_biomass)%>%\n  #note, some samples were lost; marked as 999 in dataset\n  filter(mass!=999)%>%\n  mutate(type=ifelse(form=='ambr'|form=='forb'|form=='nfix', 'forb', ifelse(form=='andro'|form=='gram'|form=='gram'|form=='schiz'|form=='spor', 'grass', ifelse(form=='pdead'|form=='pyr', 'litter', 'woody'))))%>%\n  select(calendar_year, site_code, community_type, plot_id, type, mass, treatment, comments)%>%\n  group_by(calendar_year, site_code, community_type, plot_id, treatment, type)%>%\n  summarise(biomass=sum(mass))%>%\n  ungroup()%>%\n  mutate(area_sampled=0.1)\n# write.csv(ser_anpp, 'SER_anpp_formatted.csv')\n\nser_spp <- read.csv('KNZ_SER_NutNet_spp list.csv')%>%\n  mutate(sppnum=SppNum)\n\nser_comp <- read.csv('SER_composition.csv')%>%\n  left_join(ser_treatments)%>%\n  mutate(calendar_year=year, site_code=site, community_type='NA', plot_id=plot, comments=note_cover)%>%\n  filter(sppnum!=999, sppnum!=998, sppnum!=0, sppnum!=888)%>%\n  group_by(site_code, calendar_year, community_type, treatment, plot_id, comments, sppnum)%>%\n  summarise(abundance=max(cover))%>%\n  ungroup()%>%\n  left_join(ser_spp)%>%\n  mutate(species_code=sppnum, genus_species=taxa)%>%\n  select(calendar_year, site_code, community_type, treatment, plot_id, species_code, genus_species, abundance, comments)\n# write.csv(ser_comp, 'SER_composition_formatted.csv')\n\n",
+    "created" : 1520270739489.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "2225326918",
+    "id" : "5177DB2",
+    "lastKnownWriteTime" : 1520277887,
+    "last_content_update" : 1520277887545,
+    "path" : "C:/Users/la pierrek/Desktop/R files/drought-recovery/data_cleaning.R",
+    "project_path" : "data_cleaning.R",
+    "properties" : {
+        "tempName" : "Untitled1"
+    },
+    "relative_order" : 1,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}
